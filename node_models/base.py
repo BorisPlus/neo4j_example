@@ -11,33 +11,37 @@ class Neo4jNode(Neo4j):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
-    def save(self, driver):
+    def save(self, session):
         for _ in filter(lambda x: self.kwargs.get(x) is None, self.required):
             return self, None
-        with driver.session() as session:
-            return self, session.write_transaction(self._save, **self.kwargs)
-
-    @classmethod
-    def _save(cls, tx, **kwargs):
-        setter = ', '.join('obj.%(k)s = $%(k)s ' % dict(k=k) for k in kwargs)
+        setter = ', '.join('obj.%(k)s = $%(k)s ' % dict(k=k) for k in self.kwargs)
+        # statement = (
+        #     "CREATE (obj:{obj}) "
+        #     "SET {setter} "
+        #     "RETURN id(obj);"
+        # ).format(
+        #     setter=setter,
+        #     obj=self.__class__.__name__.lower()
+        # )
         statement = (
-            "CREATE (obj:{obj}) "
-            "SET {setter} "
-            "RETURN id(obj)"
+            "MERGE (obj:{obj}) "
+            "ON CREATE SET {setter} "
+            "ON MATCH SET {setter} "
+            "RETURN id(obj);"
         ).format(
             setter=setter,
-            obj=cls.__name__.lower()
+            obj=self.__class__.__name__.lower()
         )
         if Neo4jNode.DEBUG:
             print('\t', statement)
-        result = tx.run(statement, **kwargs)
+        result = session.run(statement, **self.kwargs)
         was_saved = False
         try:
             was_saved = result.single()
         except ConstraintError:
             return was_saved
 
-        return False if was_saved is None else True
+        return self, False if was_saved is None else True
 
 
 def f(o):
@@ -56,7 +60,7 @@ class Neo4jRelation(Neo4j):
     kw = dict()
 
     @staticmethod
-    def _save(tx, obj: Neo4jNode, related_obj: Neo4jNode, relation_dict, is_directed=None, **kwargs):
+    def save(session, obj: Neo4jNode, related_obj: Neo4jNode, relation_dict, is_directed=None):
         if is_directed is None:
             is_directed = True
         obj_description = '( %(obj_class)s:%(obj_class)s %(obj_data)s )' % dict(
@@ -79,7 +83,7 @@ class Neo4jRelation(Neo4j):
                 "MATCH {obj_description} "
                 "MATCH {related_obj_description} "
                 "CREATE UNIQUE ({obj_marker})-[{relation_marker}]-{is_directed}({related_obj_marker}) "
-                "RETURN id({obj_marker}), id({related_obj_marker})"
+                "RETURN id({obj_marker}), id({related_obj_marker});"
             ).format(
                 is_directed='>' if is_directed else '',
                 obj_description=obj_description,
@@ -91,7 +95,7 @@ class Neo4jRelation(Neo4j):
 
             if Neo4jRelation.DEBUG:
                 print('\t', statement)
-            result = tx.run(statement)
+            result = session.run(statement)
             try:
                 if result.single() and was_saved is None:
                     was_saved = True
@@ -100,14 +104,6 @@ class Neo4jRelation(Neo4j):
             except ConstraintError:
                 was_saved = False
         return was_saved
-
-    def save(self, driver, obj: Neo4jNode, related_obj: Neo4jNode, relation_dict, is_directed=None, **kwargs):
-        with driver.session() as session:
-            return session.write_transaction(
-                self._save, obj=obj, related_obj=related_obj,
-                relation_dict=relation_dict,
-                is_directed=is_directed
-            )
 
 
 class IntValued(Neo4jNode):

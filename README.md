@@ -100,9 +100,26 @@ On row 17668 time for data insert is **0.13** sec.
 
 **How can I speed up my code?**
 * Place statements into one longtime transaction?
-* Rewrite CQL-statements?
+* Rewrite QL-statements?
 * Anything else?
 
+### Update of code 2019.12.11 (twice as fast)
+ 
+My штыуке code become twice as fast!!! :)
+
+```text
+STEP 17667 , STEP TIMER 0.06 sec , GLOBAL TIMER 765.59 sec
+STEP 17668 , STEP TIMER 0.06 sec , GLOBAL TIMER 765.65 sec
+```
+
+On row 17668 time for data insert is **0.06** sec. And new `GLOBAL TIMER` **765.65** sec. vs old `GLOBAL TIMER` **1461.00** sec.
+
+So (compare my old and last git commits):
+* I place statement to one transaction ( commit after every 1000 rows from dataset)
+* I rewrite QL-statement for MergeOrCreate (like SQL - InsertOrUpdate)
+
+But I think it is still slow. How about you?
+* Anything else?
 
 Best regards.
 
