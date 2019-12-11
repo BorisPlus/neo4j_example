@@ -2,10 +2,14 @@
 
 ![example](README.files/example.png "example")
 
-## How can I speed up my code?
 
-* Place statements into one longtime transaction?
-* Rewrite CQL-statements?
+```text
+STEP 17668 , STEP TIMER 0.06 sec , GLOBAL TIMER 765.65 sec
+```
+
+How can I speed up my code (see my updates  at bottom):
+* Place statements into one longtime transaction (+done)?
+* Rewrite QL-statements (+done)?
 * Anything else?
 
 ## Dataset
@@ -105,7 +109,7 @@ On row 17668 time for data insert is **0.13** sec.
 
 ### Update of code 2019.12.11 (twice as fast)
  
-My штыуке code become twice as fast!!! :)
+My code become twice as fast!!! :)
 
 ```text
 STEP 17667 , STEP TIMER 0.06 sec , GLOBAL TIMER 765.59 sec
