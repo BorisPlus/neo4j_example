@@ -1,5 +1,8 @@
 # Example of Neo4j usage
 
+__Preamble__: *If you need graph view just store data as graph* 
+![neo4j](https://dist.neo4j.com/wp-content/uploads/neo4j_logo-325x150.png "neo4j")
+
 ![example](README.files/example.png "example")
 
 
